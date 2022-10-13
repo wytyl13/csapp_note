@@ -6,6 +6,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <math.h>
 
 typedef unsigned char *byte_pointer;
 
@@ -113,7 +114,117 @@ size_t copy_from_kbuf(void *dbuf, size_t maxlen)
     return len;
 }
 
+//define a function to judge whether arguments can be added without overflow.
+//notice, we can define it based on unsigned a + unsigned b != a+b-2^w
+int uadd_ok(unsigned x, unsigned y) 
+{
+    //unsigned + unsigned = unsigned.
+    //(uint64_t)(unsigned+unsigned):notice, this is calculate first, cast second, so if overflow happend
+    //you will not get the real result, it means the cast is not useful, the overflow will not be stopped.
+    //you should do it like follow to prevent the overflow.
+    uint64_t z = (uint64_t)x + (uint64_t)y;
+    //notice:the index of overflow bit is 32. the highest bit number is 33
+    if ((x + y) != (z - pow(2, (sizeof(unsigned) * 8))))
+        return 1;
+    return 0;
+}
 
+
+//pow will return the long unsigned type.
+//notice : if you want to cast from long unsigned to int, it should cast from long unsigned to long first,
+//then you should cast from long to int second, if not do like this, it will not work.
+//you can not cast long unsigned to int directly. the cast from unsigned to signed used the complement.
+//get int -10 from unsigned 10;
+int not_unsigned(unsigned x) 
+{
+    return (int)(long)(pow(2, 32) - x);
+}
+
+//get unsigned 10 from int -10
+unsigned get_not_unsigned_from_int(int x) 
+{
+    return ((unsigned)(long)pow(2, 32) - (unsigned)x);
+}
+
+int get_not_unsignedInt_from_int(int x) 
+{
+    return ((int)(long)pow(2, 32) - x);
+}
+
+
+/**
+ * @Author: weiyutao
+ * @Date: 2022-10-10 15:16:45
+ * @Parameters: int x, int y.
+ * @Return: -1 : negative overflow; 0 : not overflow; 1 : opposite overflow.
+ * @Description: the function can judge whether two int added is overflow?
+ */
+int sadd_ok(int x, int y) 
+{
+    uint64_t z = (uint64_t)x + (uint64_t)y;
+    if ((x + y) == z)
+    {
+        return 0;//not overflow.
+    }
+    else if((x + y) == (z - pow(2, (sizeof(int) * 8))))
+    {
+        return 1;//oppposite overflow.
+    }
+    else
+    {
+        return -1;//negative overflow.
+    }
+}
+
+//define the function can get the not of x. the type of x is unsigned or int.
+int get_not_x(void *x) 
+{
+    int *y = x;
+    return ((int)(long)pow(2, 32) - *y);
+}
+
+/**
+ * @Author: weiyutao
+ * @Date: 2022-10-10 20:12:00
+ * @Parameters: 
+ * @Return: overflow : return 0, else return 1;
+ * @Description: judge whether two int number multiplication is overflow.
+ */
+int multi_ok(int x, int y) 
+{
+    int p = x * y;
+    //if x = 0, return 1 directly. if x != 0, judge whether p / x == y, if yes, return 1, else return 0.
+    return !x || p / x == y;
+}
+
+
+/**
+ * @Author: weiyutao
+ * @Date: 2022-10-10 20:29:19
+ * @Parameters: size_t is the byte of each ele. the first param is a pointer pointting to the array what is
+ * a address store the first ele of array.
+ * @Return: return a pointer pointting to the buf.
+ * @Description: 将ele_cnt个数据结构复制到malloc分配的缓冲区中。
+ */
+void *copy_elements(void *ele_src[], int ele_cnt, size_t ele_size) 
+{
+    //notice : this code method is error. we should use the unsigned to accept the ele_size 
+    //to prevent someone use the negative number.
+    // void *result = malloc(ele_cnt * ele_size);
+    uint64_t asize = ele_cnt * (uint64_t)ele_size;
+    void * result = malloc(asize);
+    if (result == NULL)
+        //malloc failed.
+        return NULL;
+    void *next = result;
+    int i;
+    for (i = 0; i < ele_cnt; i++)
+    {
+        memcpy(next, ele_src[i], ele_size);//copy the ele_src[i] to next, the ele_size is the size of each ele.
+        next += ele_size;//move the pointer.
+    }
+    return result;
+}
 
 int main(int argc, char const *argv[])
 {
@@ -391,5 +502,128 @@ int main(int argc, char const *argv[])
     //vulnerability in progress, so we need to attention it in the follow-up work.
 
     //94 page
+    //until here, we have got some special about unsigned, especially the cast from signed to unsigned will
+    //generate many error, there is one method to prevent the error is never use the unsigned, the unsigned is
+    //dedicated to the c language, because the other language think it is not need. But the signed is useful
+    //sometimes, just like you want to set flag or mod operation etc...
+    
+    //the integer arithmetic.
+    //sometimes, sub two opposite number will generate a negative number, and x<y is not equal to x-y<0, this is
+    //because the limititions about computer. if you want to sub 1111 and 1111, the result is 11110
+    //15+15=30=11110, but if you have the limits in bit, just like you have 4 bit, so you can get a result
+    //1110 = 14, so if you have two 4 bit number, you should have a at least 5 bit to accept the sub of them.
+    //if not, the overflow will happen, and we can get the highest bit is what we dropped, so the real result
+    //14 = 15 + 15 - 2^4 = 14; so the conclusion is, if overflow happend, the result is equal to the real result
+    //minus 2^w, the w means the bit number, w is 4 in this case. notice, w is the highest index in fact, beacause
+    //the highest bit inde we dropped is 4, so the w is 4 in here. the index is start with zero.notice the difference
+    //between index bit and the bit numbers. just like this case, the bit numbers is 4, the highest index bit is 3.
+    //now we can define a function to judge whether arguements can be added without overflow.
+
+    //if unsigned overflow, then the result 4294967295+1 = 4294967296-2^32 = 4294967296-4294967296=0
+    //if overflow result = real % 2^w --> 4294967295+1=4294967296%4294967296
+    printf("it is not overflow? %s\n", uadd_ok(4294967295, 199) ? "true" : "false");
+    //echo false, the max number is 4294967295 for unsigned, so if the result is greate than it, overflow happend.
+
+
+    //remind: w is the bit numbers, w-1 is the highest index bit. the max number that a w bit number binary
+    //can show is 2^w-1, the max highest bit number is 2^(w-1)
+    //the not unsigned of x is -x: x + (-x) = 0
+    //if unsigned x = 0, -x = x; else -x = 2^w - x;
+    //just like a unsigned x = 10, the bin is 0000 0000 0000 0000 0000 0000 0000 1010
+    //-x = 2^32-10 = 4294967286 : bin 11111111111111111111111111110110
+    //signed 11111111111111111111111111111111 = -1; -1-8-1=-10;
+    //what shows above? if we want to get the not unsigned of x,we can calculate the 2^w-x first, then we 
+    //cast it from unsigned to signed, the signed will be the negative of x. notice, the cast is from dec to
+    //binary first, consider the bianary as signed. so we can define the not unsigned function base on above.
+    //the expand will not change a number, but the truncate can change a number.
+    //if you want get unsigned 10 from int -10, you can use (unsigned)(2^w-(-10))
+    //if you want get int -10 from unsigned 10, you can use (int)(long)(2^w-10);
+    unsigned uxx = 10;
+    printf("the not unsigned of %u is %d\n", uxx, not_unsigned(uxx));
+    //echo the not unsigned of 10 is -10
+    int xxx = -10;
+    printf("the unsigned of %d is %u\n", xxx, get_not_unsigned_from_int(xxx));
+    //echo the unsigned of -10 is 10;
+
+    //it is the cast from unsigned to int or int to unsigned, if you want to cast opposite int from negative int
+    //you should use -x = 2^w-x; not need to use the cast.
+    int xxxx = 10;
+    printf("the not unsigned of %d is %d\n", xxxx, get_not_unsignedInt_from_int(xxxx));
+
+    //97 page.
+    //we have learned the two unsigned added, then we can consider the two int added.
+    //first, two int added should be range from -2^31 to 2^31-1. if the result not in the range, 
+    //the overflow will happend. second, we should consider the negative overflow if result is less than
+    //-2^31=-2147483648, and opposite overflow if the result is greater than 2^31-1=2147483647.
+    //then, we should get the conclusion, if not overflow, x+y = x+y; if opposite overflow  that x+y > 
+    //2147483647, int x+ int y = (uint64_t x + uint64_t y) - 2^w.w is 32 for int, the highest bit is 
+    //31 for int. if negative overflow that x+y < -2147483648, int x+ int y = (uint64_t x + uint64_t y) + 2^w
+    //we can define the function that judge whether two int added is not overflow? negative overflow? opposite overflow?
+    //the range is from -2147483648 to 2147483647, not overflow. greater is opposite overflow, less is negative overflow.
+    
+    //sadd_ok function test
+    int result_int_add = sadd_ok(-2147483647, -2); 
+    if (result_int_add == 0)
+    {
+        printf("not overflow\n");
+    }
+    else if (result_int_add == 1)
+    {
+        printf("opposite overflow\n");
+    }
+    else
+    {
+        printf("negative overflow\n");
+    }
+
+
+    /* 
+    the conclusion, the unsigned added is difference from signed added. the not unsigned of x is 2^w-x
+    unsigned add : only has the opposite overflow or not overflow
+        not overflow : unsigned x + unsigned y = (uint64_t)x + (uint64_t)y
+        opposite overflow : unsigned x + unsigned y = (uint64_t)x + (uint64_t)y - 2^w   w=32
+    int add : has the not, opposite, negative overflow three type.
+        not overflow : int x + int y = (uint64_t)x + (uint64_t)y
+        opposite overflow : int x + int y = (uint64_t)x + (uint64_t)y - 2^w    w = 32
+        negative overflow : int x + int y = (uint64_t)x + (uint64_t)y + 2^w    w = 32
+    the not unsigned from unsigned : the not unsigned of x is 2^w-x
+        cast from unsigned 10 to int -10 : (int)(long)(pow(2, 32) - x)
+    the not unsigned form int : 
+        cast from int 10 to int -10 : (int)(long)pow(2, 32) - x
+    get unsigned 10 from int -10:
+        cast from int -10 to unsigned 10 :  (unsigned)(long)pow(2, 32) - (unsigned)x
+    */
+    unsigned uxxxx = 10;
+    printf("the not of %u is %d\n", uxxxx, get_not_x(&uxxxx));
+    int xxxxx = -10;
+    printf("the not of %d is %d\n", xxxxx, get_not_x(&xxxxx));
+
+    //the multiplication about unsigned.
+    //first, the unsigned is range from 0 to 2^w-1
+    //seconde, the two unsigned multiplication is range from 0 to (2^w-1)^2 = 2^2w-2^(w+1)+1;
+    //third, this need 2w bit to show the unsigned multiplication.
+    //if you want to truncate a number to w bit, you should calculate the number % 2^w
+    //for example, you want to truncate 10 to 2 bit, the result is equal to 10 % 2^2 = 2;0...1010 = 10 -truncate-> 10 = 2
+    //我们不需要了解乘法底层的位计算逻辑，但是我们需要知道乘法计算的一些规则
+    //int x * int y = (x * y) % 2^w   w=32; 
+    //unsigned x * unsigned y = (x * y) % 2^w   w=32;
+    //因为两个w位的数相乘需要2w位来接收。所以如果还使用一个int32位的去接收，就会发生阶段，以上计算的就是截断的结果。
+    //这里为什么要强调阶段，这是因为不管是无符号还是补码的两个数相乘，他们的实际相乘结果的位表示不一样，但是他们
+    //截断后的位表示是一样的。这个就是乘法计算的一个重要特性。
+    //unsigned 101 * unsigned 011 = 5 * 3 = 15; real result = 15 = 1111; truncate to 3 bit = 111;
+    //int 101 * int 011 = -3 * 3 = -9; real result = -9 = 10111; truncate to 3 bit = 111;
+    //you can get the truancate result is same. we can judge whether a multiplication is overflow.
+    //you just only need to use the x*y = (real)x*y % 2^w, 如果你想截断到w位就模2^w即可.
+
+    printf("it is not overflow? %s\n", multi_ok(2147483647, 10) ? "true" : "false");//false, overflow.
+
+    int ele[] = {1, 3, 5, 7, 9, 11, 13, 15};
+    int *result1 = (int *)copy_elements((void **)&ele, 5, sizeof(int));
+    printf("%p\n", result1);
+    /*     for (i = 0; i < 5; i++)
+        {
+            printf("%d", result1[i]);
+        }
+        printf("\n"); */
     return 0;
 }
