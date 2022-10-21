@@ -1,3 +1,12 @@
+/**********************************************************************
+ * Copyright (C) 2022. IEucd Inc. All rights reserved.
+ * @Author: weiyutao
+ * @Date: 2022-10-18 16:30:57
+ * @Last Modified by: weiyutao
+ * @Last Modified time: 2022-10-18 16:30:57
+ * @Description: this file involved the integer calculate using bit operation, 
+ * the integer multiplication, add, minimum, divide, and so on.
+***********************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -110,6 +119,10 @@ int beOpposite(int x)
  * integer is 0. but why the result of the function is correct? this concept we do not consider,
  * the rigorous logic structure is what we need to do. so we need to do judge first. judge whether the
  * integer is negative.
+ * notice : this function can calculate two any number multiplication, it can be an odd, even, negative, 
+ * opposite etc.. so the multication function is generally and we can use the << to handle all multiplication
+ * problem. so you can use it to calculate 10 * 2, 10 * -2, -10 * 2, -10 * -2, 10 * 3, 10 * -3, -10 * 3, -10 * -3.
+ * it means, you can calculate any multiplication used this function.
  */
 int get_multiplication(int x, int y) 
 {
@@ -166,28 +179,54 @@ int get_multiplication_simple(int x, int y)
     return z;
 }
 
+/**
+ * @Author: weiyutao
+ * @Date: 2022-10-18 15:46:37
+ * @Parameters: the first param is an any number, it can be opposite, negative, odd, even. the
+ * second number can just be an even number, and it can not be negative. if it is negative, you only need to
+ * add the negative symbol after calculate. so our function can be this, the first param can be any number, 
+ * and the opposite of the second param must be an even. so you can calculate 10 / 2, 10 / -2, -10 / 2, -10 / -2; 
+ * @Return: 
+ * @Description: this function can calculate an any number divide an even number. do not calculate the divide
+ * is an odd number. this is different from multiplication. this is different from multiplication, we should
+ * consider the condition that the the divide is negative. but the multiplication need not to consider, so 
+ * we should define our logical, not only multiplication but also the divide, we should consider condition that 
+ * the second number is negative. so we should do a judge whether the second number is a negative at the start.
+ */
 int get_divide(int x, int y) 
 {
     if (y == 0)
+    {
         perror("the logical error\n");
         exit(1);
-    
-    int i, z = 0;
+    }
+    // when we started, we should be opposite all number right now.
+    int x_opposite = beOpposite(x);
+    int y_opposite = beOpposite(y);
+
+    int i;
+    // 1 = 0001 = 2^0, 2 = 0010 = 2^1; so we can get the power is the bit index of the bit value is 1.
+    // 1010 / 1 = 1010 / 2^0 = 1010 >> 0 = 1010 = 10
+    // and because the second param must be an even, so we can break the loop for bits once we found
+    // one bit value is one. so it means we should return once the if condition is true.
     for (i = 0; i < (sizeof(int) * 8); i++)
     {
-        if ((y >> i) & 0x01)
+        if ((y_opposite >> i) & 0x01)
         {
-            x >>= i;
+            x_opposite >>= i;
+            break;
         }
-        else
-        {
-            continue;
-        }
-        z = add(z, x);
-        x <<= i;
     }
-    return z;
+
+    // then we should consider the signed before we return the result.
+    // if have two negative or zero negative among the two number, we should return x_opposite, 
+    // else return -x_opposite.
+    if (((getSign2(x) == 0) && (getSign2(y) == 0)) || ((getSign2(x) == -1) && (getSign2(y) == -1)))
+        return x_opposite;
+    return negative1(x_opposite);
 }
+
+
 
 int main(int argc, char const *argv[])
 {
@@ -268,18 +307,39 @@ int main(int argc, char const *argv[])
 
     //the integer division, it is more slowly than the multiplication.
     //you will use the right move for a integer division a power of 2. just like x / 2^k
-    printf("%d\n", get_multiplication(10, 10));
-    printf("%d\n", add(10, 10));
-    printf("%d\n", negative1(10));
-    printf("%d\n", negative2(10));
-    printf("%d\n", reduction(10, -10));
-    printf("%s\n", getSign1(10) == 1 ? "opposite" : "negative");
-    printf("%s\n", getSign2(-10) == 0 ? "opposite" : "negative");
-    printf("%d\n", beOpposite(-10));
-    printf("%d\n", get_multiplication_simple(10, -10));
+    // printf("%d\n", get_multiplication(10, 10));
+    // printf("%d\n", add(10, 10));
+    // printf("%d\n", negative1(10));
+    // printf("%d\n", negative2(10));
+    // printf("%d\n", reduction(10, -10));
+    // printf("%s\n", getSign1(10) == 1 ? "opposite" : "negative");
+    // printf("%s\n", getSign2(-10) == 0 ? "opposite" : "negative");
+    // printf("%d\n", beOpposite(-10));
+    // printf("%d\n", get_multiplication_simple(10, -10));
 
 
     //then we can think about the divide. just like the multiplication, the divide is >>
-    printf("%d\n", get_divide(10, 2));
+    // just like you want to calculate unsigned or int 10 / 2;
+    // 10 / 2^1 = 10 >> 1 = 1010 >> 1 = 0101 = 5;
+    // int -10 / 2 = 1111 1111 1111 1111 1111 1111 1111 0110 >> 1 = 1111 1111 1111 1111 1111 1111 1111 1011 = -1-4=-5;
+    // but if you want to calculate an odd number, you can give an another method, you can not use this method directly. 
+    // what method we should give? wait a moment, we should consider if this method we have defined can 
+    // handle an odd divide a power of 2. so it mean the result for dividing have remainder
+    // just like 9 / 2 = 4.5;
+    // 1001 >> 1 = 0100 = 4;
+    // so this method we have define is take down the whole.
+    // printf("%d\n", get_divide(10, -2));// goto the row number 187.
+
+
+    // but the difference between divide and multiplication is the former need different method to handle
+    // divede the power of 2 and divide the not power of 2. and the last only need one method to handle this.
+    // so it means, we need a extra metho to calculate the problem, a number divide an odd number.
+    // so we have handle a number divide an even number, now we can consider divide an odd number.
+    // notice, the method we defined above are all rounding,即计算结果都是向下取整
+    // until here, we have learned all calculate about integer, so the next we will learn the calculate about float.
+
+    // we should define it in another file.
+
+
     return 0;
 }

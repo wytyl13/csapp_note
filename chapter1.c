@@ -1,3 +1,13 @@
+/**********************************************************************
+ * Copyright (C) 2022. IEucd Inc. All rights reserved.
+ * @Author: weiyutao
+ * @Date: 2022-10-18 16:32:00
+ * @Last Modified by: weiyutao
+ * @Last Modified time: 2022-10-18 16:32:00
+ * @Description: this file involved some binary information show, and some integer calculate.
+ * more about information show, just like the translation from binary to other model.
+ * and it has some bit operation to define the function integer calculate.
+***********************************************************************/
 #include <stdio.h>
 #include <string.h>
 #include <limits.h>
@@ -228,6 +238,64 @@ void *copy_elements(void *ele_src[], int ele_cnt, size_t ele_size)
 
 int main(int argc, char const *argv[])
 {
+
+    /**this is just some immature note, you can ignore it.
+     * 
+        Any time you have possible for corner cases you have to understand these nuances better,similarly 
+     for floating-point if you are going to use floating-point for serious computation whether it is 
+     scientific research or for designing bridges or nuclear power plants or something.
+        
+        In particular we are going to look at the language of intel processors,the most recent version to 
+    them are called x86-64,the 64-bit version of their instruction set.This courses is 64-bits all the time.
+    Another is aspects of the memory system so modern computers have a very complex layered memory system 
+    to try give you to hight performance in high capacity at the same time.And there's some results of that
+    system that can mean that if you program write a program well it might work really well,if you do not it
+    could run very poorly because it is not making use of this hierarchical memory system.So and also there's
+    a lot of bugs that show up especially in C programs.That have to do with memory referencing errors.So 
+    understanding what those errors are what their manifestation is how to prevent them as a big part of 
+    the course.Because as you saw it doesn't do bound checking so it is easy to write code that does invalid 
+    stuff.
+
+        The reason why bits are greatest is in the digital world you can sort of take what otherwise an anolog
+    signal and quantity it.It turns out it is much easier to store one bit information or a digital value than
+    it is to store an analog value.
+
+        for example,picture 1,you can see the memory distribution about the function define in your code.just 
+    like the example,when you input the outrange of your object define,you can also get the result rather than
+    the erro,since the memory will friendly allows you to access,no matter if your access effective.As long as 
+    the memory address you want to access has the content and your instruction has not interrupt the running 
+    program,you will get the result.To sum up,the memory will be unconditional to be accessed for you.So this is a 
+    pretty good demonstration of a why C programming can drive you crazy.boolean algebras that is logical operation:and or not xor
+
+        the boolean operate on bit vectors:we can do these boolean operations where we apply them on each successive 
+    bit in thah word and these symbols we use the &,|,^ and ~ are actually the ones that see use is to represent 
+    these operations.So again we will spend a lot of time making use of the fact that in C.And this is one of 
+    the features to C that people like is that you can do these sort of very low level of bit manipulations directly 
+    in the language.such as the picture3
+
+        p && *p   you should this code if you want to make sure that you are not accessing a null pointer.
+    shift operations:
+        left shift:x << y,the meaning is shift bit-vector x left y positions,you should throw away extra bits on left,and then you should fill with 0's on right.
+        right shift:x >> y,the meaning is shift bit-vector x right y positons,you should throw away extra bits on right,and then you should fill with 0's on left.
+    this is logistic shift,just list the picture 4 as the example.Another is arithmetic shift what will use the significant bit to instead the 0's.So the fill value 
+    will be 0 or 1.And that will make sense more when we understand how negative numbers get represented in a machine.and that is the purpose of it and why it is called arithmetic.
+    the coversion from binary to hexadecimal:first,you should group by every four points.But note that if the total number of bits 
+    is not a multiple of 4,the left group could use 0 instead.second,coversion each group from binary value to hexadecimal value.
+    And then the method about from binary to decimal is the conventional method.the two's power to power,and multiply it and the 
+    corresponding binary.The result you get is decimal value.this is unsigned.If the signed,the left two's power to power value need to add minus sign.
+    
+        a byte consists of 8 bits.the value range is from 00000000 to 11111111,the decimal value is from 0 to 255.these two show method all inconvenient 
+    to describe a bit pattern.the binary is too long and decimal is very complex to conversion to bit pattern.so the hexadecimal is a good method.
+
+        if you want to calculate two positive number,you can direct operation.But if you want to calculate the negative number,you should calculate the complement,
+    the complement is equals to 妯?minus the absolute value of negative value.then you can operation plus.the complement not the only way to represent a positive 
+    and negative numbers.But it is so univarsal that you will hardly ever encounter another case.
+
+        the original code to complement code:the positive value is the same,the negative value is first to get the reverse code what is all the not in addition to 
+    the highest bits based on the original code,and then plus 1.It is not the only way to represent a positive and negative numbers.if all bits are 1,you can find 
+    the hex value is -1,1 1 1 1 1 = -16 + 8 + 4 + 2 + 1 = -1.
+    */
+
     /*
     linux64：
     int 12345 hex show : 39300000      小端法    数值的十六进制表示在每台机器上的输出结果一样,64位机器int类型是4字节大小
