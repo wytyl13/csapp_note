@@ -97,6 +97,67 @@ int main(int argc, char const *argv[])
     // x86, 
     // page 148
 
+    // the program counter : named pc, its role is to give the address in memory of next instruction
+    // gcc -Og -S chapter3_test.c
+    /**
+     * use the instruction above, you can get the assembly instruction just like the next.
+    pushq	%rbx   // push the %rbx into stack. the %rbx is register
+	movq	%rdx, %rbx  // 
+	call	mult2
+	movq	%rax, (%rbx)
+	popq	%rbx
+
+    it will be genereted the hex code in .o file if you used -c param for gcc just like the next row 
+    after assembling. you can check this binary code in .o file, and you can also check it by using gdb.
+    the method is, gdb can debug the bianary .exe file, it can also debug the .o file.
+    gdb chapter3_test
+    gdb chapter3_test.o
+    you should use the former if you want to debug the process and check the variable, pointer, and logical rule.
+    you should use the last if you want to debug the assembly instruction, just like the push pop mov and call etc.
+
+    this .o file involved the bianary code of assembly instruction just like push, pop.  the .exe file involved
+    the binary code of machine code. this code will be executive by machine directly.
+    fileName.c --> code for people.
+    fileName.c ++ include file ++ define --> pretreatment
+    fileName.s --> assembly instruction(push pop mov call) used gcc -Og -S
+    fileName.o --> hex code for assembly instruction used gcc -Og -c
+    fileName.exe --> bianry code for assembly instruction used gcc -Og -o
+
+    so the order is ,c file --(gcc -Og -S)--> assembly instruction(.s file) --(gcc -Og -c)--> hex code(.o file) -(gcc -Og -o)-> binary code(.exe file).
+    hex code in .o file,just like 53 48 89 d3 e8 00 00 00 00 48 89 03 5b c3, you can use gdb fileName.s to get it
+    x/14xb multstore, this code in gdb program means get the 14 byte hex code start from multstore function
+    in .o file. you can also open this .o file used vim, and show it used xxd to show binary. you can use the command 
+    %!xxd in vim process. 
+
+    x/14xb main, this command can used in gdb, it mean show the debug file orginal code start from main
+    function to step 14 byte. the x mean hex show, the b means byte.
+
+    you can also use the objdum to disassembly the .o file. just like objdump -d fileName.o
+    the next code show the assembly instruction for each hex code, it is disassembly.
+    the left is hex code in .o file, the right code is the assembly instruction corresponding the left hex code.
+    0000000000000000 <multstore>:
+    0:   53                      push   %rbx
+    1:   48 89 d3                mov    %rdx,%rbx
+    4:   e8 00 00 00 00          callq  9 <multstore+0x9>
+    9:   48 89 03                mov    %rax,(%rbx)
+    c:   5b                      pop    %rbx
+    d:   c3                      retq   
+
+
+
+    of course, the machine can just known the hex code, and it will know nothing about the 
+    assembly code transformed from .c file in .s file.
+
+    commonly used and less operation instruction will have more byte numbers.
+    the concept of disassembly is got the assembly code based on hex code in .o file. it mean need not
+    read the assembly code from .s file. it is the truely disassembly.
+    the assembly code that disassembly are different from the assembly code in .s file that gcc generated.
+    you can disassembly based on the exe file, and you can also disassembly based on the .o file. you can 
+    get assembly code based on these method above.
+    you should know these above code. 
+
+    // page 154
+    */
 
     return 0;
 }
