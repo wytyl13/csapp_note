@@ -159,5 +159,234 @@ int main(int argc, char const *argv[])
     // page 154
     */
 
+    /**
+    the intel assembly instruction.  
+    the assembly code suffix. based on the byters of the variable.
+    b/1 bytes; w/2 bytes; l/4 bytes; q/8 bytes; s/float; l/double;
+    the intel term is not the bytes, the unit is word for intel.
+    datatype        intel term         assembly suffix      size(bytes)
+    char            byte                b                       1 byte
+    short           word                w                       2 bytes
+    int             double words        l                       4 bytes
+    long            four words          q                       8 bytes
+    char *          four words          q                       8 bytes
+    float           single precision    s                       4 bytes
+    double          double precision    l                       8 bytes
+    the special is float and double. you can just keep in mind that 
+    just like the mov instruction.
+    movb    mov byte
+    movw    mov word
+    movl    mov double words
+    movq    move four words
+    32 bits can be names long word.
+    movl can show four bytes integer and eight bytes double.
+    movs can show float.                     
+    
+    a x86-64 cpu involved a group of 16 registers, what can store 64 bits. these registers
+    can store integer and pointer. the name of these registers are start with %r, but the name
+    rule is not so single, it is based on the history of register development.
+
+    the original 8086 : the register numbers is 8, 16 bits. %rax~%rbp
+        %rax %rbx %rcx %rdx %rsi %rdi %rbp 
+    IA32 version : the register numbers is 8, expand to 32 bits. 
+        %rax %rbx %rcx %rdx %rsi %rdi %rbp
+    x86-64 version : the register numbers is 16, %rax~%rbp expand to 64 bits. the new registers
+    %r8~%r15 is 64 bits. all registers are 64 bits in this version.
+
+    what is the concept of the register? first, the register is 64 bits in x86-64 version.
+    we should combine the assembly instruction to consider the register, just like the movb
+    movw movl, the assembly instruction can do operation from the low bits of register. the
+    16 bits operation can operate 2 bytes, 32 bits operation can operate 4 bytes, 64 bits operation
+    can operate all register, beacause the register has 64 bits. then if we used assembly
+    instruction to operate less than 64 bits, then what the rest bits state of the register will be?
+    it also has a rule, if you operate less than 8 bytes, the rest bits will not be changed if you operated
+    1 and 2 bytes, and the rest bits will be changed to 0 if you operated 4 bytes. the different register
+    has the different function. the special is stack pointer %rsp what can point the end address for stack.
+    the function of the register involved stack management, pass the function params, the return value of function,
+    store the local or temp data. it has the special rule.
+
+
+    the multiple oprands can be exists in assembly instruction, it was suppoeted in x86-64.
+    the operands has three types, the three types are defined based on the original data what 
+    is the object that register will operate. the original data can be from const, register and
+    memory. the const can be named immediate, just like $0x1f.  the reigister is register, can be
+    used by R[r]. the memory can be named memory reference,  can be used by M[Addr].
+
+    just like the follow
+    operand type        format      operand value       name      
+    the immediate       $Imm        Imm                 immediate addressing
+    register            r_a         R[r_a]              register addressing
+    memory              Imm         M[Imm]              absolute addressing
+    memory              (r_a)       M[R[r_a]]           indirect addressing
+    memory              Imm(r_b)    M[Imm+R[r_b]]       basic address sub the offset addressing
+    memory              (r_b, r_i)  M[R[r_b]+R[r_i]]    indexed adddressing
+    memory              Imm(r_b, r_i)   M[Imm+R[r_b]+R[r_i]] indexed addressing
+    memory              (, r_i, s)  M[R[r_i]*s]         proportion indexd addressing
+    memory              Imm(, r_i, s)   M[Imm+R[r_i]*s] proportion indexd addressing
+    memory              (r_b, r_i, s)   M[R[r_b]+R[r_i]*s]  proportion indexd addressing
+    memory              Imm(r_b, r_i, s) M[Imm+R[r_b]+R[r_i]*s] proportion indexd addressing
+
+    you can keep in mind it by three type operated by register.
+    the first type, the data from immediate. $Imm, it is const number.
+    the second type, the data from register. r_a, R[r_a], you should use R[] to index the register
+    the third type, memory, it involved many types, 
+        r_b, the offset to immediate.
+        r_i, the indexd addressing.
+        s, the proportion to r_i, it is limited to 1, 2, 4, 8. the s is based on the r_i
+        you should use the Imm if the format has the Imm(), just like Imm(r_b) = M[Imm+R[r_b]]
+        (r_b) = M[R[r_b]]. it is indirect addressing. you should use M[] index the memeory operand.
+        you should use (r_b) not the r_b to distinguish the memory relative addressing and register addressing.
+        but you should notice, if you use the address directly, then you are addressing based on the address, it is named memory addressing.
+        just like 0x104, this means you want to return the content of this memory, and you should notice, all
+        the return values are address, it means the return values of assembly instructions are all the address.
+    
+    immediate : $Imm   Imm
+    register  : r_a    R[r_a]         register addressing
+    memory    : 0x104   M[0x104]      absolute addressing
+    memory    : (r_a)  M[R[r_a]]      indirect memory addressing
+    memory    : Imm(r_b) M[Imm+R[r_b]]      offset memory addressing
+    memory    : Imm(r_b, r_i)  M[Imm+R[r_b]+R[r_i]]     indexd addressing
+    memory    : Imm(r_b, r_i, s)    M[Imm+R[r_b]+R[r_i]*s]    proportion indexd addressing
+
+    注意三种操作数类型的专业术语，分别为立即数、寄存器和内存引用，注意内存引用的专业术语
+    r_b  : offset to the immediate      基址加偏移
+    r_i  : indexd to the immediate      变址
+    s    :  proportion to the r_i      比例变址
+    只有r_b的情况我们称之为基址加便宜，有了r_i就称为变址，有了s就称为比例变址，注意没有r_i只有s是没有意义的
+    
+    the above knowledge, you should know a few important points.
+    1 you should understand the calculate of binary, dec, and hex. just like,
+        (bin : 10001) + (dec : 10) = 17 + 10 = 27 = bin : 0001 1011
+        you should understand the hex calculate, because it is general for people.
+            0x100 + 0x3 * 4 = 0x100 + 0xc = 0x10c. notice, each min unit in the hex calculate are 1, and
+            the max unit is f. each unit in hex mean 4 bits. because the max number in hex is f, it mean 16 for dec.
+            0x100 + 0xc = 0x10c. you can try to transform it from hex to binary.
+            0001 0000 0000 + 0000 0000 1100 = bianry : 0001 0000 1100 = hex : 10c = dec : 256+12=268
+        you should understant that, 8 bits are 1 byte, 4 bits can represent the max hex f. so 32 bits can present
+        8 hex. and the same system can add directly, just like add(hex, hex). you can add directly as long as it has not
+        greater than max hex f. you should use the binary idea to calculate it if it happend.
+    2 the assembly oprands has three types, immediate, register, memory. the format $0x100 means immediate,
+    it will return the value of this address 0x100, it is also an address. the format %rax means register, it will
+    return the value of R[%rax], it is also an address. the format 0x100 means absolutely memory addressing,
+    it will return the value of M[0x100], it is also an address. the format (%rax) means relative memory addressing,
+    it will return the value of M[R[%rax]], it is also an address. so the different between %rax and (%rax) is register addressing
+    and memeory addressing. the memory addressing format is Imm(%rax, %rbx, s), you should use the basic address Imm, if it is exist.
+    the s is dedicated to %rbx, the %rax is the offset for Imm. the %rbx is indexd param. it means Imm+%rax+%rbx*s.
+    $0x100 means immediate addressing. 0x100 means absolutely memory addressing.
+
+
+    now, give you a table, you should give the return value of the assembly operands based on it.
+    address     value                   register       value
+    0x100       0xff                    %rax            0x100
+    0x104       0xab                    %rcx            0x1
+    0x108       0x13                    %rdx            0x3
+    0x10c       0x11
+
+
+    assemble oprand         addressing type        apression          return value
+    %rax                    register               R[%rax]              0x100
+    $0x108                  immediate              0x108                0x108
+    0x104                   absolutely memory       M[0x104]            0xab
+    (%rax)                  relative memory         M[R[%rax]]          0xff
+    4(%rax)                 offset memory           M[0x4+R[%rax]]      0xab
+    260(%rcx, %rdx)         indexd memory           M[0x104+R[%rcx]+R[%rdx]]    0x13   note:dec 260 = hex 0x104
+    0xfc(, %rcx, 4)         proportion indexd memory M[0xfc+R[%rcx]*4]  0x11       note: hex 0xfc+ hex 0xc = 0x10c
+
+
+    then, the commonly used instruction is mov. it means copy the data of one address to the other address.
+    mov s, d        s->d
+    movb. movw, movl, movq. these instruction will realise the same function, the difference is they will operate the different size data.
+    movb, move byte data
+    movw, move 1 word data
+    movl, move double words data
+    movq, move four words data
+    movabsq, move absolutely four words data.
+
+    the two operands for mov instruction, just like the source operads s and target operands d in mov s d.
+    the s and d can not be both the memory addressing. it means s and d must have one is not the memory addressing. 
+    in other words, the two operands must have one is immediate or register addressing.
+
+    the corresponding for the different sizes register.
+    register        1 byte      2 bytes     4 bytes         the function
+    %rax            %al         %ax         %eax            return value
+    %rbx            %bl         %bx         %ebx            stored by the caller
+    %rcx            %cl         %cx         %ecx            the fourth param
+    %rdx            %dl         %dx         %edx            the third param
+    %rsi            %sil         %si         %esi            the second param
+    %rdi            %dil         %di         %edi            the first param
+    %rbp            %bpl         %bp         %ebp            stored by the caller
+    %rsp            %spl         %sp         %esp            the stack pointer
+    ..........
+
+
+    if you want to move from memeory addressing to memory addressing, you must use two instruction. you can do as follow.
+    the register bit numbers are 32, 8 bytes
+    movl $0x100, %eax   imeediate--register 4 bytes  
+    movw %rax, %rbx     register--register  2 bytes
+    movb (%rax, %rbx), %rax memory--memory  1 bytes
+    movb $-17, (%rax)   immediate--memory   1 bytes
+    movq %rax, -12(%rax) register--memory   8 bytes
+
+    b w l q. corresponding 1 2 4 8 bytes.
+
+    there are one another clustering for mov instruction, movz and movs, the former is zero extension, the
+    last is one extension, just like the arithmetic move to right and logical move to right. you will use it
+    when you want to move the small source data size to big target data size. just like the follow
+    movzbw s, r           move byte to word. and used zero extension.
+    movzbl s, r           move byte to double words, and used zero extension.
+    movzwl s, r           move word to double words, and used zero extension.
+    movzbq s, r           movve byte to four words, and used zero extension.
+    cltq   %eax, %rax     move four words %eax register to 8 words register %rax, and used the signed extension.
+    and it is dedicated to the register %rax and %eax, it means it can just be used for them. expand four words to eight words.
+    it will happend when you want mov the source data size is smaller than the target data size.
+    you can use movz or movs, the last is one extension. it can also be named signed extension.
+    the especial is, you should use cltq %eax %rax, it means you want to use signed extension from %eax to %rax,
+    it is dedicated to the register.
+
+    for example,
+        1 instruction and operands : movabsq $0x0011223344556677, %rax        
+        2 description : movabsq means move 64 bits of $0x0011223344556677 to %rax                                                                  
+        3 result : %rax = 0011223344556677
+        
+        1 instruction and operands : movb $-1, %al                         
+        2 description : movb means move 1 byte, 8 bits, or 2 hex of -1 to %al, the %al is the lowest 1 byte of %rax. 
+                        it means this instruction will change the lowest 8 bits of dec -1 to the lowest 8 bits of %rax
+                        the hex show for -1 is ffffffff. so this instruction will change ff to the lowest 8 bits of %rax
+                        , so the result of %rax after this instruction is 00112233445566ff, change 77 to ff.
+        3 result : 00112233445566ff
+
+        1 instruction and operands : movw $-1, %ax
+        2 description : move the lowest 1 word of dec -1 to %ax, the %ax is the lowest 1 words of %rax.
+                        so this instruction will change 1 word, can also be named 2 bytes or 16 bits or 4 hex to %ax.
+                        so the result value of %rax after this instruction is 001122334455ffff
+        3 result :  001122334455ffff
+
+        1 instruction and operands : movl $-1, %eax
+        2 description : move the lowest double words of dec -1 to the lowest double words %eax, the %eax is the lowest 
+                        double words of %rax. the 1 word is 2 bytes, double words are 4 bytes, 1 byte is 8 bits.
+                        so the 1 word is 16 bits, double words are 32 bits, 8 hex numbers. so you will change ffffffff to 
+                        %eax, so the result of %rax after this instruction will be 00112233ffffffff                  
+        3 result : 00112233ffffffff
+
+        1 instruction and operands : movq $-1, %rax
+        2 description : movq will move 64 bits, also can be named 8 bytes or four words. %rax is 64 bits
+                        so the result of %rax after this instruction will be ffffffffffffffff
+        3 result : ffffffffffffffff
+
+        so you should understand the above, and you should notice the bit numbers or word number for register.
+        the size of each register for x86-64 are both 64 bits, or four words, or 8 bytes.
+        %rax, the register, 64 bits.  you should use movq instruction to oprate it
+        %eax, the lowest double words, or 32 bits, or 4 bytes of register %rax. you should use movl instruction to oprate it.
+        %ax, the lowest 1 word, or 16 bits, or 2 bytes of register %rax, you should use movw instruction to operate it.
+        %al, the lowest 1 byte, or 8 bits, or 2 hex of register %rax, you should use movb instruction to operate it.
+
+        binary, 32 bits are a unit in a 32 bits operate system. it is used in computer executive.
+        dec, it is not commonly in computer.
+        hex, it is commonly used in computer optput.
+        1 hex number is equal to 4 bits.
+        2 hex numbers is equal to 1 byte.
+
+        32 bits can show 8 hex numbers.
+    */
     return 0;
 }
