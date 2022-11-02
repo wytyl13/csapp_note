@@ -160,7 +160,7 @@ int main(int argc, char const *argv[])
     */
 
     /**
-    the intel assembly instruction.  
+    the intel assembly instruction.
     the assembly code suffix. based on the byters of the variable.
     b/1 bytes; w/2 bytes; l/4 bytes; q/8 bytes; s/float; l/double;
     the intel term is not the bytes, the unit is word for intel.
@@ -172,7 +172,7 @@ int main(int argc, char const *argv[])
     char *          four words          q                       8 bytes
     float           single precision    s                       4 bytes
     double          double precision    l                       8 bytes
-    the special is float and double. you can just keep in mind that 
+    the special is float and double. you can just keep in mind that
     just like the mov instruction.
     movb    mov byte
     movw    mov word
@@ -180,15 +180,15 @@ int main(int argc, char const *argv[])
     movq    move four words
     32 bits can be names long word.
     movl can show four bytes integer and eight bytes double.
-    movs can show float.                     
-    
+    movs can show float.
+
     a x86-64 cpu involved a group of 16 registers, what can store 64 bits. these registers
     can store integer and pointer. the name of these registers are start with %r, but the name
     rule is not so single, it is based on the history of register development.
 
     the original 8086 : the register numbers is 8, 16 bits. %rax~%rbp
-        %rax %rbx %rcx %rdx %rsi %rdi %rbp 
-    IA32 version : the register numbers is 8, expand to 32 bits. 
+        %rax %rbx %rcx %rdx %rsi %rdi %rbp
+    IA32 version : the register numbers is 8, expand to 32 bits.
         %rax %rbx %rcx %rdx %rsi %rdi %rbp
     x86-64 version : the register numbers is 16, %rax~%rbp expand to 64 bits. the new registers
     %r8~%r15 is 64 bits. all registers are 64 bits in this version.
@@ -207,13 +207,13 @@ int main(int argc, char const *argv[])
 
 
     the multiple oprands can be exists in assembly instruction, it was suppoeted in x86-64.
-    the operands has three types, the three types are defined based on the original data what 
+    the operands has three types, the three types are defined based on the original data what
     is the object that register will operate. the original data can be from const, register and
     memory. the const can be named immediate, just like $0x1f.  the reigister is register, can be
     used by R[r]. the memory can be named memory reference,  can be used by M[Addr].
 
     just like the follow
-    operand type        format      operand value       name      
+    operand type        format      operand value       name
     the immediate       $Imm        Imm                 immediate addressing
     register            r_a         R[r_a]              register addressing
     memory              Imm         M[Imm]              absolute addressing
@@ -229,7 +229,7 @@ int main(int argc, char const *argv[])
     you can keep in mind it by three type operated by register.
     the first type, the data from immediate. $Imm, it is const number.
     the second type, the data from register. r_a, R[r_a], you should use R[] to index the register
-    the third type, memory, it involved many types, 
+    the third type, memory, it involved many types,
         r_b, the offset to immediate.
         r_i, the indexd addressing.
         s, the proportion to r_i, it is limited to 1, 2, 4, 8. the s is based on the r_i
@@ -239,7 +239,7 @@ int main(int argc, char const *argv[])
         but you should notice, if you use the address directly, then you are addressing based on the address, it is named memory addressing.
         just like 0x104, this means you want to return the content of this memory, and you should notice, all
         the return values are address, it means the return values of assembly instructions are all the address.
-    
+
     immediate : $Imm   Imm
     register  : r_a    R[r_a]         register addressing
     memory    : 0x104   M[0x104]      absolute addressing
@@ -253,7 +253,7 @@ int main(int argc, char const *argv[])
     r_i  : indexd to the immediate      变址
     s    :  proportion to the r_i      比例变址
     只有r_b的情况我们称之为基址加便宜，有了r_i就称为变址，有了s就称为比例变址，注意没有r_i只有s是没有意义的
-    
+
     the above knowledge, you should know a few important points.
     1 you should understand the calculate of binary, dec, and hex. just like,
         (bin : 10001) + (dec : 10) = 17 + 10 = 27 = bin : 0001 1011
@@ -303,7 +303,7 @@ int main(int argc, char const *argv[])
     movabsq, move absolutely four words data.
 
     the two operands for mov instruction, just like the source operads s and target operands d in mov s d.
-    the s and d can not be both the memory addressing. it means s and d must have one is not the memory addressing. 
+    the s and d can not be both the memory addressing. it means s and d must have one is not the memory addressing.
     in other words, the two operands must have one is immediate or register addressing.
 
     the corresponding for the different sizes register.
@@ -321,7 +321,7 @@ int main(int argc, char const *argv[])
 
     if you want to move from memeory addressing to memory addressing, you must use two instruction. you can do as follow.
     the register bit numbers are 32, 8 bytes
-    movl $0x100, %eax   imeediate--register 4 bytes  
+    movl $0x100, %eax   imeediate--register 4 bytes
     movw %rax, %rbx     register--register  2 bytes
     movb (%rax, %rbx), %rax memory--memory  1 bytes
     movb $-17, (%rax)   immediate--memory   1 bytes
@@ -344,12 +344,12 @@ int main(int argc, char const *argv[])
     it is dedicated to the register.
 
     for example,
-        1 instruction and operands : movabsq $0x0011223344556677, %rax        
-        2 description : movabsq means move 64 bits of $0x0011223344556677 to %rax                                                                  
+        1 instruction and operands : movabsq $0x0011223344556677, %rax
+        2 description : movabsq means move 64 bits of $0x0011223344556677 to %rax
         3 result : %rax = 0011223344556677
-        
-        1 instruction and operands : movb $-1, %al                         
-        2 description : movb means move 1 byte, 8 bits, or 2 hex of -1 to %al, the %al is the lowest 1 byte of %rax. 
+
+        1 instruction and operands : movb $-1, %al
+        2 description : movb means move 1 byte, 8 bits, or 2 hex of -1 to %al, the %al is the lowest 1 byte of %rax.
                         it means this instruction will change the lowest 8 bits of dec -1 to the lowest 8 bits of %rax
                         the hex show for -1 is ffffffff. so this instruction will change ff to the lowest 8 bits of %rax
                         , so the result of %rax after this instruction is 00112233445566ff, change 77 to ff.
@@ -362,10 +362,10 @@ int main(int argc, char const *argv[])
         3 result :  001122334455ffff
 
         1 instruction and operands : movl $-1, %eax
-        2 description : move the lowest double words of dec -1 to the lowest double words %eax, the %eax is the lowest 
+        2 description : move the lowest double words of dec -1 to the lowest double words %eax, the %eax is the lowest
                         double words of %rax. the 1 word is 2 bytes, double words are 4 bytes, 1 byte is 8 bits.
-                        so the 1 word is 16 bits, double words are 32 bits, 8 hex numbers. so you will change ffffffff to 
-                        %eax, so the result of %rax after this instruction will be 00112233ffffffff                  
+                        so the 1 word is 16 bits, double words are 32 bits, 8 hex numbers. so you will change ffffffff to
+                        %eax, so the result of %rax after this instruction will be 00112233ffffffff
         3 result : 00112233ffffffff
 
         1 instruction and operands : movq $-1, %rax
@@ -387,6 +387,151 @@ int main(int argc, char const *argv[])
         2 hex numbers is equal to 1 byte.
 
         32 bits can show 8 hex numbers.
+
+        you should notice the point, movb, movw,movl, movq corresponding byte, word, double words and four words.
+        it is corresponding the %al(byte), %ax(word), %eax(double words), %rax(four words) of this original register %rax.
+        so if the assemble instructions is not cooresponding, just like movb $0xF, (%ebx), the immediate $0xF is four bits,
+        and the %ebx is double words, so this size in it is not corresponding, so this assemble will be erro.
+
+        then let's simulation a sample that the data transfer. we will code the data exchange function used c language and then
+        code the assembly instruction for it.
+
+        c language data transfer function as follow
+        long exchange(long *xp, long y)
+        {
+            long x = *xp;
+            *xp = y;
+            return x;
+        }
+        then we will descripe the function used assembly
+
+        1 long exchange(long *xp, long y) --> assembly : xp in %rdi, y in %rsi, they are all store by the function param register.
+
+        2 long x = *xp --> assembly : movq (%rdi), %rax, you should understand that you are move long type variable from
+        the variable xp to the new created variable x, the long x is stored in the register %rid, you should use the indirectly
+        addressing to get the data about it, the new variable x is stored in the register %rax, so this instruction will be it.
+        but you should notice that the %rdi and %rsi is dedicated to the function parmas.
+
+        3 *xp = y --> assembly : movq %rsi, (%rdi), notice, the pointer param will be the memory addressing.
+        and it will be the register addressing if the param is not the pointer param. but it is not absolutely correct.
+        we can understand it used the comparison method. just like the local variable x, it is stored used register,
+        and the param is also stored used register if the param is not the pointer, that means the param is not
+        got from the memory, it is also mean this get meothod of this param is not the indirectly addressing, it is register addressing,
+        why?because these local variable will be efficient if we stored it used register. but the reference data must used the
+        indirectly addressing, beacause this data we can just get it from the memory used the indirectly addressing, just like M[R[%rdi]].
+        this assembly (%rdi) is mean M[R[%rdi]], its efficient is lower than the register addressing just like %rdi.
+
+        4 return --> assembly : ret.
+
+        the pointer in c language is addressing in memeory in fact, it is defined during the process runing,
+        and it is created in memory, the indirectly addressing means put this pointer into a register, the used it
+        in memory addressing. the local variable is not created in memory, it is just define in register.
+
+        then we will learn the for assembly casts.
+        0 src_t *sp; assuming that the variable sp is stored in %rdi
+        1 dest_t *dp; assuming that the variable dp is stored in %rsi
+        2 *dp = (dest_t) *sp; --> assembly code, you should read the data from the memory, beacause the *sp
+        is a pointer, so you should use M(R[%rsi]) to get the address of sp, and the * can get the data of this address.
+        then, you should cast the data type from src_t to dest_t. and you should do a temp store used the register %rax or other.
+        you can store the data after casts used %rax, you can just use the part type of the register %rax, just like %eax or %ax, %al.
+        it means you should use the assembly code movq (%rdi), %rax if the data size is 64 bits or four words.
+        3 then you should move %rax to (%rsi), (%rsi) means M[R[%rsi]], the indirectly memory addressing.
+        just like the assembly code movq %rax, (%rsi)
+
+        we can do some cases, the assembly code of casts from src_t to dest_t.
+        just like the function
+        src_t *x; the x is memory address, stored in >>>> %rd i>>>> when the process run.
+        dest_t *y; the y is memory address, stored in >>>>> %rsi >>>> when the process run.
+        *y = (dest_t)*x;
+
+        the table for assembly code the c language casts code the above, the concept is you should use a temp varibale to store the data first,
+        it means you should use a register to store the src_t data, and the selected about the move instruction must correct, beacuse the
+        realise of casts based on it. because it can determined the move size of register. just like movb, movw, movl, movq.
+
+        src_t               dest_t              instruction
+        long                long                movq (%rdi), %rax; movq %rax, (%rsi); notice, the %rsi register is a local variable to as a temp data variable.
+                                                why use a temp variable, beacuase the assembly code can not move data from memory to memory, it means you should
+                                                move instruction must have a not memory addressing.
+        char                int                 movl (%rdi), %eax; movl %eax, (%rsi); notice, the int is 4 bytes or 32 bits or double words, you should use the %eax
+                                                to show the size of register, corresponding the instruction is movl.
+
+        char                unsigned            just like casts from char to int, you should use the instruction that can corresponding the tranform data size. just like
+                                                the dest_t data type.
+
+    then give you the assmebly code, you give the c language code used it.
+    void decodel(long *xp, ;long *yp, long *zp)
+
+    decodel:
+        movq    (%rdi), %r8
+        movq    (%rsi), %rcx
+        movq    (%rdx), %rax
+        movq    %r8, (%rsi)
+        movq    %rcx, (%rdx)
+        movq    %rax, (%rdi)
+        ret
+
+    then, we will give the c language code based on it.
+    the three param used the register, %rdi, %rsi, %rdx
+    the param *xp is stored in %rdi, the param *yp is stored in %rsi, the param *zp is stored in %rdx.
+    movq (%rdi), %r8; the (%rdi) means indirectly memory addressing, means the *xp, %r8 means the original register.
+    this instruction mean move the data *xp to a local variable, and the register is 64 bits. so this register can
+    also store a 64 bits data type, just like long, so this instruction has not involved the casts.
+
+    the c language can show just like, long x = *xp;
+    similarly, the second code can show used c language, long y = *yp
+    the third code can show used c language, long z = *zp
+    the fourth code can show used c language, *yp = x
+    the fifth code can show used c language, *zp = y
+    the sixth code can show used c language, *xp = z
+    the seventh code can show used c language, return; because the function has no return value.
+    and the special you should notice is that the move instruction is movq, the size about the movq is 64 bits, or four words.
+
+    so the complete function can show used the c language as the follow.
+    void decodel(long *xp, *yp, *zp) 
+    {
+        long x = *xp;
+        long y = *yp;
+        long z = *zp;
+
+        *yp = x;
+        *zp = y;
+        *xp = z;
+
+        return;
+    }
+
+    then, we will learn the push and pop instruction. these two instructions is based on the stack dataStructure.
+    the rule of stack is after the advanced. the process stack is stored into the area of memory in x86-64.
+    the direction of increasing is down. so the address of the stack elements is the smallest. the register %rsp is 
+    dedicated to the stack, so we can name the %rsp as stack pointer. so the register %rsp is dedicated to the stack.
+
+    notice, then we will learn the stack instruction push and pop. we can learn based on the four words, it can also be named
+    as 8 bytes, or 64 bits. this is the one read size of 64 bit computers
+    
+    instruction              the efficient                              description 
+    pushq S                  R[%rsp] - 8 -> R[%rsp]; S -> M[R[%rsp]]     push four words to stack
+    popq D                   M[R[%rsp]] -> D; R[%rsp] + 8 -> R[%rsp]     pop four words to stack                             
+
+    you should understand that the address of stack top elemet is smallest. 
+    the push isntruction:
+        you should change the address that stack pointer first, it can alse be named register %rsp,
+        because the operands is pushq, it can operate four words, 64 bits. so the address can --8,
+        because the unit is 1 byte. so you should code R[%rsp] --8; then the register %rsp address is 
+        the address of stack top elment. so you can move the data S to memory address that register %rsp stored
+        , you should use the indirectly memory addressing, just like movq S, (%rsp). it is the stack top elemnt.
+
+    the pop isntruction:
+        you should store the data of stack register %rsp, it can show by assembly code, M[R[%rsp]] -> D; move the data
+        of %rsp to a temp data just like D, then you should change the address about stack register %rsp. you should code
+        usd R[%rsp] ++8; beacause the stack address will ++ if you used the pop. beacause the stack top elment is the smallest address.
+
+    because the push and pop will use the move instruction, so the push and pop is equal to the code as follow.
+    pushq %rbp   >>> it means push data %rbp into stack.
+    it is equal to the code as follow.
+    subq $8, %rsp   you should change the address about the %rsp, %rsp--8, the instruction sub means --.
+    movq %rbp, (%rsp)  notice, the %rbp is register addressing, and the %rsp is dedicated to stack, and it is created on
+    the memory, beacause it has the address, so you should use the indirectly memory addressing.
+
     */
     return 0;
 }
