@@ -15,6 +15,39 @@
 #include <limits.h>
 #include <inttypes.h>
 
+char *getss(char *s) 
+{
+    int c;
+    char *dest = s;
+    while ((c = getchar()) != '\n' && c != EOF)
+    {
+        *dest++ = c;
+    }
+    if (c == EOF && dest == s)
+    {
+        return NULL;
+    }
+    *dest++ = '\0';
+
+    return s;
+}
+
+void echo() 
+{
+    char buf[8]; // define the size of array
+    getss(buf); 
+    // get a line form standard input, and store it used buf
+    // if you stored a big size content, you will generate a reference boundary error.
+    puts(buf); // echo the content in buf.
+}
+
+// void echo_test() 
+// {
+//     char buf[8];
+//     gets(buf);
+//     puts(buf);
+// }
+
 int main(int argc, char const *argv[])
 {
     // IEEE regulation.电气和电子工程师协会 the float show in this file is based on it.
@@ -713,7 +746,6 @@ int main(int argc, char const *argv[])
     you should notice the dedicated register %rax for mulq and imulq or idivq and divq at here.
     */
 
-
     /*
     then, we will learn add control to assembly code, it means the instructions will not run sequential. just like
     if, continue, switch and so on. machine code provide two basic low-level machanisms to realize it. test the data, and
@@ -741,7 +773,7 @@ int main(int argc, char const *argv[])
     for mov bit operate, CF will be set as the lastest bit. and the OF will be set to 0.
     INC and DEC instruction will set OF and ZF, but it will not change CF.
     CMP and TEST instruction can also set the condition code. it means they will only set condition code, will not
-    modified any registers value. so the difference between these instruction and original instruction is 
+    modified any registers value. so the difference between these instruction and original instruction is
     the former can only set the condition code and can not change the value of registers. and the former can change the
     register value. just like the CMP and SUB.
     the method for using TEST is, you can use like the code above.
@@ -761,14 +793,14 @@ int main(int argc, char const *argv[])
             setb, set when below than
 
         just like the case as follow
-        
+
         int comp(data_t a, data_t b)
         a in %rdi, b in %rsi
-        
+
         comp:
             cmpq %rsi, %rdi         compare a:b, notice the param order.
-            setl %al                set the register %al as to 0 or 1. the size of %al is 1 byte, 8 bits.                
-            movzbl %al, %eax        the insturction movzbl means expand %al to double words used 0 and 
+            setl %al                set the register %al as to 0 or 1. the size of %al is 1 byte, 8 bits.
+            movzbl %al, %eax        the insturction movzbl means expand %al to double words used 0 and
                                     then move it to the double words register %eax.
             ret                     return.
 
@@ -780,17 +812,17 @@ int main(int argc, char const *argv[])
         and setl %al instruction means you will store the compare result 0 or 1 used the 1 byte register %al.
         %al, %eax is all the different size type of register %rax.
 
-        you should notice. 
+        you should notice.
         setl is sigend less, signed <
         setle is signed less equal, signed <=
         setg is signed greater, signed >
         setge is signed greater and equal, signed >=
-        
+
         seta is unsigned greater, unsigned >
         setae is unsigned greater equal, unsigned >=
         setb is unsigned below, unsigned <
         setbe is unsigned below euqal, unsigned <=
-        
+
         sete is equal. equal or zero. =/0
         setne is not equal, or not zero. ~=/~0
 
@@ -805,17 +837,66 @@ int main(int argc, char const *argv[])
         to handle the signed and unsigned number, it is because of the same bits operate for all arithmetic calculate.
 
     then,we will learn the jump instruction.
+    jump instruction will lead to the runing process switch to
+    a new location. the jump destination that process will jump to
+    is usually indicated a label. just like the follow.
+    movq $0, %rax       set %rax to 0
+    jmp .L1             Goto L1
+    movq(%rax), %rdx
+  .L1:
+    popq %rdx           this code is the destination will jump to.
+                        this code means the process will skip to movq(%rax), %rdx
+                        it mean this code will not be performed.
 
 
+    skip while, switch, and so on condition keywords,
+    , stack and recursive to pointer arithmetic.
+    177 page.
+    we will learn some about pointer arithmetic. c language
+    can do the pointer arithmetic. just like p+i.
 
+    a[2] == *(a+3))
+    the cast is better than operator.
+    function pointer.
+        int (*f)(int *);
+        f is a function pointer, the param is int *.
+        the return value is int type.
 
+        int *f(int *); it will be a function, that param is int *
+        and return value is int *.
+    notice, c language will not check the legitimacy about the reference boundary for an array.
+    if you do an array reference that cross the boundary, you will get an error number.
+    more serious, you will destroy the stack data structure.
+    because the variable will be created in stack when process running, and you do some array
+    reference in stack during process running.
 
+    buffer overflow. a common form about array reference boundary.
+    you defined an address to store a string, but the size of address is
+    less than the content you want to store. just like the function as follow.
 
+    attack about buffer overflow.
+    in order to attack, they usually insert attack code and 
+    insert the pointer that pointing to the attack code. so this 
+    pointer is also one part for the attack code. but if they want to
+    define this pointer that pointing to the code, they should know the stack
+    address that the code in stack. in past, the code in stack is fix, so they
+    can get it easily. and the same process run in each computer, and the stack 
+    address is fix for this process, just like a server process, it own a fix stack
+    address in each computer, so attacker can design a process to attack each computer.
+    this can be named security monoculture. the random stack thought can solve this problem
+    , it makes the different stack address that same server process run in different computer.
+    so it means, the same code run in different compueter, the stack address will be difference 
+    for each computer. you can use a method to show the different address that 
+    same code run in one computer. just like the code as follow.
 
-    
+    skip to chapter5.
     */
+    // echo();
+    // echo_test();
 
-
-
+    // you can run this code as follow many times, you will
+    // find that each run will be get the different stack address.
+    long local;
+    printf("%p\n", &local);
     return 0;
 }
