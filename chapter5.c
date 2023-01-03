@@ -61,7 +61,8 @@ void test2(long *xp, long *yp)
 // util here, the underlying code optimization ablity is beyond the code designed ability.
 // so we will learn the ability about the code design and application first.
 // then, we will return here and go on this part learning. 
-
+// so we will learn the memory and other first, then we will return here to learn the performance optimization of the program.
+// we will learn the chapter6 first.
 int main(int argc, const char *argv[]) 
 {
 
